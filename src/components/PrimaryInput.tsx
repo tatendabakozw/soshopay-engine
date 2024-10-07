@@ -43,7 +43,7 @@ function PrimaryInput({
           rows={5}
           className={`border ${inputSizeClass} ${
             error ? "border-red-400" : "border border-zinc-300/50"
-          } bg-white text-zinc-650`}
+          } bg-white text-zinc-600`}
           placeholder={placeholder}
           value={value ?? ""}
           onChange={(e) => setValue(e.target.value)}
@@ -54,7 +54,7 @@ function PrimaryInput({
           type={type === "number" ? "number" : type} // Ensure type is 'number' for numeric input
           className={`border ${inputSizeClass} ${
             error ? "border-red-400" : "border border-zinc-300/50"
-          } bg-white text-zinc-650`}
+          } bg-white text-zinc-600`}
           placeholder={placeholder}
           value={value ?? ""}
           onChange={(e) =>
