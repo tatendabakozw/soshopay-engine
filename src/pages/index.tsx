@@ -51,7 +51,7 @@ export default function LoanScore() {
   };
 
   return (
-    <div className="container mx-auto p-8 space-y-8">
+    <div className="container mx-auto p-8 space-y-8 bg-white">
       <h1 className="text-3xl font-bold mb-6">General Cash Loan Scoring</h1>
 
       {/* Form Section */}
