@@ -33,7 +33,7 @@ function PrimaryInput({
   return (
     <div className={`flex flex-col ${className}`}>
       {label && (
-        <p className="heading-text font-semibold pl-1 pb-2">
+        <p className="text-zinc-950 font-semibold pl-1 pb-2">
           {label} {optional && "(Optional)"}
         </p>
       )}
@@ -43,7 +43,7 @@ function PrimaryInput({
           rows={5}
           className={`border ${inputSizeClass} ${
             error ? "border-red-400" : "border border-zinc-300/50"
-          } bg-white main-text`}
+          } bg-white text-zinc-650`}
           placeholder={placeholder}
           value={value ?? ""}
           onChange={(e) => setValue(e.target.value)}
@@ -54,7 +54,7 @@ function PrimaryInput({
           type={type === "number" ? "number" : type} // Ensure type is 'number' for numeric input
           className={`border ${inputSizeClass} ${
             error ? "border-red-400" : "border border-zinc-300/50"
-          } bg-white main-text`}
+          } bg-white text-zinc-650`}
           placeholder={placeholder}
           value={value ?? ""}
           onChange={(e) =>
