@@ -2,6 +2,7 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import PrimaryInput from '../components/PrimaryInput';
 import jsPDF from 'jspdf';
 import { ArrowDownTrayIcon } from '@heroicons/react/16/solid';
+import axios from 'axios';
 
 interface Expenses {
   grocery: number;
@@ -145,15 +146,12 @@ export default function Home() {
     setLoading(true);
     setResponse(null);
     try {
-      const res = await fetch('/api/preliminary-score', {
-        method: 'POST',
+      const { data } = await axios.post('/api/preliminary-score', loanDetails, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(loanDetails),
       });
 
-      const data = await res.json();
       setResponse(data);
     } catch (error) {
       console.error('Error submitting loan application:', error);
@@ -203,12 +201,10 @@ export default function Home() {
       )}
        {/* PRINT THE DOC ANALYSIS here */}
        {analysisResult && (
-          <div className="mt-4 p-4 border rounded bg-purple-100 text-left">
-            <h2 className="text-xl font-bold mb-2 text-purple-800">Document Analysis:</h2>
-            <div className="text-purple-700 text-sm">
+          <div className="mt-4 p-4 border rounded bg-zinc-100 text-left">
+            <h2 className="text-xl font-bold mb-2 text-zinc-800">Document Analysis:</h2>
+            <div className="text-zinc-700 text-sm">
               <p><strong>Analysis:</strong> {analysisResult.analysis}</p>
-              <p><strong>Client Name:</strong> {analysisResult.clientName || 'Not found'}</p>
-              <p><strong>Date of Birth:</strong> {analysisResult.dob || 'Not found'}</p>
             </div>
           </div>
         )}

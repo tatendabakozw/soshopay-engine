@@ -49,8 +49,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo", // Use a less expensive model
       messages: [
-        { role: "system", content: "You are a helpful assistant that analyzes documents. Extract the users name and date of birth or any related fields if present." },
-        { role: "user", content: `Please analyze the following document for a loan application. Provide a brief summary of key points, any red flags, and extract the client name and date of birth if present. Format your response as JSON with keys: analysis, clientName, and dob.\n\n${truncatedContent}` }
+        { role: "system", content: "You are an AI assistant specialized in analyzing loan application documents. Your task is to extract all relevant user information and provide a comprehensive analysis." },
+        { role: "user", content: `Please analyze the following document for a loan application. Extract ALL relevant user information you can find, including but not limited to: full name, date of birth, contact details, address, employment information, income, existing debts, assets, and any other details that might be relevant for a loan application. Also, provide a brief summary of key points and any potential red flags.
+    
+        IMPORTANT: Do not describe the document or mention irrelevant details. Only provide the actual information found in the document. If a piece of information is not present, leave its field empty.
+    
+        Format your response as JSON with the following structure:
+        {
+          "analysis": "Brief summary of key points and any red flags",
+          "userInfo": {
+            "fullName": "",
+            "dateOfBirth": "",
+            "contactNumber": "",
+            "emailAddress": "",
+            "homeAddress": "",
+            "employmentStatus": "",
+            "employer": "",
+            "monthlyIncome": "",
+            "existingDebts": "",
+            "assets": ""
+          },
+          "additionalInfo": {
+            // Any other relevant information found in the document
+          }
+        }
+    
+        Here's the document content:
+    
+        ${truncatedContent}` }
       ],
       max_tokens: 500, // Limit the response size
     });
@@ -63,9 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Error parsing JSON:', parseError);
       // If parsing fails, return the raw content
       analysisResult = {
-        analysis: rawContent,
-        clientName: null,
-        dob: null
+        analysis: rawContent
       };
     }
 

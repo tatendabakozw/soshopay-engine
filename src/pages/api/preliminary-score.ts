@@ -102,7 +102,7 @@ const generateDueDiligenceReport = async (loanType: string, loanDetails: LoanDet
 
 // Middleware function to validate loan details
 const validateLoanDetails = (loanDetails: LoanDetails): ValidationError | null => {
-  if (!loanDetails.loanType || !CREDIT_RULES[loanDetails.loanType]) {
+  if (!loanDetails.loanType) {
     return { error: 'Invalid or missing loan type' };
   }
   if (Object.keys(loanDetails).length === 0) {
@@ -119,13 +119,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // TODO: get clientName, dob from uploaded document analysed uing openai
 
-  const loanDetails = req.body as LoanDetails;
+  const loanDetails = req.body;
 
-  // Validate loan details
+  // // Validate loan details
   const validationError = validateLoanDetails(loanDetails);
   if (validationError) {
     return res.status(400).json(validationError);
   }
+  console.log('requesty dertails: ', loanDetails)
 
   // Generate the due diligence report
   try {
