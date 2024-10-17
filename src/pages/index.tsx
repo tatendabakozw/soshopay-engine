@@ -60,7 +60,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [analysis, setAnalysis] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -164,8 +163,6 @@ export default function Home() {
     }
   };
 
-  console.log('result after submition: ', analysis)
-
   return (
     <div className="w-full bg-zinc-100 ">
       <div className="container mx-auto p-4">
@@ -191,14 +188,19 @@ export default function Home() {
        <button 
           type="button" 
           onClick={analyzeDocument}
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm mt-8 hover:bg-green-600"
+          className={`px-4 py-2 rounded-xl mt-4 text-sm text-white ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
           disabled={!file || loading}
         >
-          Analyze Document
+          {loading ? 'Analysing...' : 'Analyse Document'}
         </button>
         
        
        </div>
+       {loading && (
+        <div className="mt-4 p-4 border rounded bg-yellow-100">
+          <p className="text-yellow-700">Analysing your document...</p>
+        </div>
+      )}
        {/* PRINT THE DOC ANALYSIS here */}
        {analysisResult && (
           <div className="mt-4 p-4 border rounded bg-purple-100 text-left">
@@ -332,7 +334,7 @@ export default function Home() {
 
          <button 
           type="submit" 
-          className={`px-4 py-2 rounded text-white ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
+          className={`px-4 py-2 text-md rounded-xl text-white ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
           disabled={loading}
         >
           {loading ? 'Submitting...' : 'Submit Application'}

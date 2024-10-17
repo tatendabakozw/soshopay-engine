@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo", // Use a less expensive model
       messages: [
-        { role: "system", content: "You are a helpful assistant that analyzes documents for loan applications. Extract the client name and date of birth or any related fields if present." },
+        { role: "system", content: "You are a helpful assistant that analyzes documents. Extract the users name and date of birth or any related fields if present." },
         { role: "user", content: `Please analyze the following document for a loan application. Provide a brief summary of key points, any red flags, and extract the client name and date of birth if present. Format your response as JSON with keys: analysis, clientName, and dob.\n\n${truncatedContent}` }
       ],
       max_tokens: 500, // Limit the response size
