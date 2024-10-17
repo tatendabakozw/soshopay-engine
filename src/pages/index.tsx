@@ -28,6 +28,12 @@ interface LoanDetails {
   yearsInBusiness: number;
 }
 
+interface AnalysisResult {
+  analysis: string;
+  clientName: string | null;
+  dob: string | null;
+}
+
 export default function Home() {
   const [loanDetails, setLoanDetails] = useState<LoanDetails>({
     clientName: '',
@@ -55,6 +61,7 @@ export default function Home() {
   const [response, setResponse] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -98,8 +105,8 @@ export default function Home() {
       });
   
       if (res.ok) {
-        const data = await res.json();
-        setAnalysis(data.analysis);
+        const data: AnalysisResult = await res.json();
+        setAnalysisResult(data);
         
         // Update loanDetails with extracted information
         setLoanDetails(prev => ({
@@ -109,7 +116,7 @@ export default function Home() {
         }));
       } else {
         const errorData = await res.json();
-        setAnalysis(`Error: ${errorData.error}`);
+        setAnalysisResult({ analysis: `Error: ${errorData.error}`, clientName: null, dob: null });
         if (res.status === 429) {
           // Add a delay before allowing another attempt
           setTimeout(() => setLoading(false), 60000); // 1 minute delay
@@ -118,7 +125,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error analyzing document:', error);
-      setAnalysis('An error occurred while analyzing the document.');
+      setAnalysisResult({ analysis: 'An error occurred while analyzing the document.', clientName: null, dob: null });
     } finally {
       setLoading(false);
     }
@@ -157,7 +164,7 @@ export default function Home() {
     }
   };
 
-  console.log('result after submition: ', response)
+  console.log('result after submition: ', analysis)
 
   return (
     <div className="w-full bg-zinc-100 ">
@@ -189,7 +196,20 @@ export default function Home() {
         >
           Analyze Document
         </button>
+        
+       
        </div>
+       {/* PRINT THE DOC ANALYSIS here */}
+       {analysisResult && (
+          <div className="mt-4 p-4 border rounded bg-purple-100 text-left">
+            <h2 className="text-xl font-bold mb-2 text-purple-800">Document Analysis:</h2>
+            <div className="text-purple-700 text-sm">
+              <p><strong>Analysis:</strong> {analysisResult.analysis}</p>
+              <p><strong>Client Name:</strong> {analysisResult.clientName || 'Not found'}</p>
+              <p><strong>Date of Birth:</strong> {analysisResult.dob || 'Not found'}</p>
+            </div>
+          </div>
+        )}
       </div>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white md:p-8 p-4 rounded-xl border border-zinc-300/50">
         <PrimaryInput
