@@ -56,33 +56,61 @@ const CREDIT_RULES: Record<string, string> = {
   `,
 };
 
-const generateDueDiligenceReport = async (loanType: string, loanDetails: LoanDetails): Promise<string> => {
-  const prompt = `
-    You are an expert in credit scoring for ${loanType}. The following are the credit scoring rules for this loan type:
-    
-    ${CREDIT_RULES[loanType]}
-    
-    Applicant details:
-    - Client Name: ${loanDetails.clientName}
-    - National ID: ${loanDetails.nationalId}
-    - Date of Birth: ${loanDetails.dob}
-    - Loan Amount: ${loanDetails.loanAmount}
-    - Monthly Income: ${loanDetails.monthlyIncome}
-    - Collateral: ${loanDetails.collateral} (${loanDetails.collateralValue})
-    - Expenses: Grocery: ${loanDetails.expenses.grocery}, Rent: ${loanDetails.expenses.rent}, Utilities: ${loanDetails.expenses.utilities}, School Fees: ${loanDetails.expenses.schoolFees}
-    - Years in Business: ${loanDetails.yearsInBusiness}
-    - Credit History: ${loanDetails.fcbScore}
-    - Repayment History: ${loanDetails.repaymentHistory}
+// New interface for storing chat context
+interface ChatContext {
+  messages: { role: string; content: string }[];
+}
 
-    Based on the rules, calculate a score, determine risk, and provide a thorough due diligence report.
-  `;
+// Simple in-memory storage for chat contexts
+const chatContexts: Record<string, ChatContext> = {};
+
+const generateDueDiligenceReport = async (loanType: string, loanDetails: LoanDetails, contextId: string): Promise<string> => {
+  // Initialize context if it doesn't exist
+  if (!chatContexts[contextId]) {
+    chatContexts[contextId] = { messages: [] };
+  }
+
+  const context = chatContexts[contextId];
+
+  // Prepare the system message with credit scoring rules
+  const systemMessage = {
+    role: 'system',
+    content: `You are an expert in credit scoring for ${loanType}. The following are the credit scoring rules for this loan type:\n\n${CREDIT_RULES[loanType]}`
+  };
+
+  // Prepare the user message with loan details
+  const userMessage = {
+    role: 'user',
+    content: `
+      Applicant details:
+      - Client Name: ${loanDetails.clientName}
+      - National ID: ${loanDetails.nationalId}
+      - Date of Birth: ${loanDetails.dob}
+      - Loan Amount: ${loanDetails.loanAmount}
+      - Monthly Income: ${loanDetails.monthlyIncome}
+      - Collateral: ${loanDetails.collateral} (${loanDetails.collateralValue})
+      - Expenses: Grocery: ${loanDetails.expenses.grocery}, Rent: ${loanDetails.expenses.rent}, Utilities: ${loanDetails.expenses.utilities}, School Fees: ${loanDetails.expenses.schoolFees}
+      - Years in Business: ${loanDetails.yearsInBusiness}
+      - Credit History: ${loanDetails.fcbScore}
+      - Repayment History: ${loanDetails.repaymentHistory}
+
+      Based on the rules, calculate a score, determine risk, and provide a thorough due diligence report.
+    `
+  };
+
+  // Combine previous context with new messages
+  const messages = [
+    systemMessage,
+    ...context.messages,
+    userMessage
+  ];
 
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
         model: 'gpt-4-turbo',
-        messages: [{ role: 'system', content: prompt }],
+        messages: messages,
         max_tokens: 1500,
       },
       {
@@ -92,13 +120,24 @@ const generateDueDiligenceReport = async (loanType: string, loanDetails: LoanDet
         },
       }
     );
-    return response.data.choices[0].message.content;
+
+    const aiResponse = response.data.choices[0].message.content;
+
+    // Update context with the new messages
+    context.messages.push(userMessage);
+    context.messages.push({ role: 'assistant', content: aiResponse });
+
+    // Limit context to last 10 messages to prevent token limit issues
+    if (context.messages.length > 10) {
+      context.messages = context.messages.slice(-10);
+    }
+
+    return aiResponse;
   } catch (error: any) {
     console.error('Error calling OpenAI:', error.response?.data || error.message);
     throw new Error('Failed to generate report');
   }
 };
-
 
 // Middleware function to validate loan details
 const validateLoanDetails = (loanDetails: LoanDetails): ValidationError | null => {
@@ -112,26 +151,26 @@ const validateLoanDetails = (loanDetails: LoanDetails): ValidationError | null =
 };
 
 // Next.js API handler
+// Updated Next.js API handler
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' }); // Allow only POST requests
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // TODO: get clientName, dob from uploaded document analysed uing openai
+  const { loanDetails, contextId } = req.body;
 
-  const loanDetails = req.body;
-
-  // // Validate loan details
+  // Validate loan details
   const validationError = validateLoanDetails(loanDetails);
   if (validationError) {
     return res.status(400).json(validationError);
   }
-  console.log('requesty dertails: ', loanDetails)
+
+  console.log('request details: ', loanDetails);
 
   // Generate the due diligence report
   try {
-    const report = await generateDueDiligenceReport(loanDetails.loanType, loanDetails);
-    return res.status(200).json({ report });
+    const report = await generateDueDiligenceReport(loanDetails.loanType, loanDetails, contextId);
+    return res.status(200).json({ report, contextId });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

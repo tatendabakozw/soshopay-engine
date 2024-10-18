@@ -1,8 +1,9 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import PrimaryInput from '../components/PrimaryInput';
 import jsPDF from 'jspdf';
 import { ArrowDownTrayIcon } from '@heroicons/react/16/solid';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid'; // Add this import
 
 interface Expenses {
   grocery: number;
@@ -60,12 +61,19 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState<any>(null);
+  const [contextId, setContextId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
+  
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    console.log('File input changed');
+    if (e.target.files && e.target.files.length > 0) {
+      console.log('File selected:', e.target.files[0].name);
       setFile(e.target.files[0]);
+    } else {
+      console.log('No file selected');
     }
   };
 
@@ -141,18 +149,39 @@ export default function Home() {
     }));
   };
 
+  // Use useEffect to initialize or retrieve contextId from localStorage
+  useEffect(() => {
+    const storedContextId = localStorage.getItem('loanAppContextId');
+    if (storedContextId) {
+      setContextId(storedContextId);
+    } else {
+      const newContextId = uuidv4();
+      setContextId(newContextId);
+      localStorage.setItem('loanAppContextId', newContextId);
+    }
+  }, []);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setResponse(null);
+    
+    
     try {
-      const { data } = await axios.post('/api/preliminary-score', loanDetails, {
-        headers: {
-          'Content-Type': 'application/json',
+      const { data } = await axios.post('/api/preliminary-score', 
+        { 
+          loanDetails, 
+          contextId 
         },
-      });
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       setResponse(data);
+      setContextId(data.contextId); // Store the contextId returned from the API
     } catch (error) {
       console.error('Error submitting loan application:', error);
       setResponse('An error occurred while processing your application.');
@@ -160,6 +189,13 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  // const startNewConversation = () => {
+  //   const newContextId = uuidv4();
+  //   setContextId(newContextId);
+  //   localStorage.setItem('loanAppContextId', newContextId);
+  //   setResponse(null);
+  // };
 
   return (
     <div className="w-full bg-zinc-100 ">
