@@ -5,6 +5,12 @@ import { ArrowDownTrayIcon } from '@heroicons/react/16/solid';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; // Add this import
 
+  
+const tab_options = [
+  {name:"Cash", _id: 'cash_loans'},
+  {name:"PAYG", _id: 'payg'},
+]
+
 interface Expenses {
   grocery: number;
   rent: number;
@@ -64,6 +70,7 @@ export default function Home() {
   const [contextId, setContextId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [selectedTab, setSelectedTab] = useState(tab_options[0]);
 
   
 
@@ -190,6 +197,7 @@ export default function Home() {
     }
   };
 
+
   // const startNewConversation = () => {
   //   const newContextId = uuidv4();
   //   setContextId(newContextId);
@@ -199,8 +207,9 @@ export default function Home() {
 
   return (
     <div className="w-full bg-zinc-100 ">
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 flex flex-col w-full space-y-4">
       <h1 className="text-2xl font-bold mb-4 text-zinc-950 text-center">Loan Application Form</h1>
+     
       <div className="text-2xl flex flex-col space-x-4 font-bold mb-4 bg-white rounded-xl border border-zinc-300/50 md:p-8 p-4 text-center">
       <div>
           <label htmlFor="document" className="block text-sm text-zinc-700 font-semibold">
@@ -244,6 +253,19 @@ export default function Home() {
             </div>
           </div>
         )}
+      </div>
+      <div className="mx-auto">
+      <div className="bg-white p-1 rounded-xl border border-zinc-300/50 text-sm font-semibold flex flex-row items-center self-center">
+      {tab_options.map((tab:any, index:number) => (
+        <button
+          key={tab._id}
+          className={`flex-1 text-center py-2 px-8 ${index===0 ? 'rounded-l-lg' : ' rounded-r-lg '} ${tab._id === selectedTab._id ? 'bg-zinc-200 text-zinc-950' : 'bg-white text-black'}`}
+          onClick={() => setSelectedTab(tab)}
+        >
+          {tab.name}
+        </button>
+      ))}
+      </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white md:p-8 p-4 rounded-xl border border-zinc-300/50">
         <PrimaryInput
