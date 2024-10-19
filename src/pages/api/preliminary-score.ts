@@ -23,6 +23,13 @@ interface LoanDetails {
   runningLoans: 'Yes' | 'No';
   repaymentHistory: 'Good' | 'Fair' | 'Adverse';
   yearsInBusiness: number;
+  guarantorRelationship: 'Close' | 'Distant' | 'None';
+  guarantorIncome: number;
+  productUsageHours?: number; // Only for PAYG loans
+  productVerified?: boolean; // Only for PAYG loans
+  subscriptionCost?: number; // Only for PAYG loans
+  firstTimeBorrower: boolean;
+  historyWithOtherMFIs: 'None' | 'Limited' | 'Frequent';
 }
 
 // Define the validation error type
@@ -30,32 +37,47 @@ interface ValidationError {
   error: string;
 }
 
-// Credit scoring rules
+// Updated CREDIT_RULES
 const CREDIT_RULES: Record<string, string> = {
   'Cash Loan': `
-    - Income: 0-20 points (Higher income = Higher score)
-    - Credit History: 0-30 points (Better history = Higher score)
-    - Debt-to-Income Ratio: 0-20 points (Lower ratio = Higher score)
-    - Collateral: 0-30 points (More valuable collateral = Higher score)
-    
+    1. Income-to-Expense Ratio (Affordability): 0-25 points
+    2. Loan Amount: Evaluated but no direct points
+    3. Guarantor Relationship: 0-10 points
+    4. Guarantor's Income and Affordability: 0-15 points
+    5. Collateral Value: 0-20 points
+    6. Repayment History: -10 to 20 points
+    7. FCB Credit Score: -10 to 25 points
+    8. Age of Borrower: -5 to 10 points
+    9. History with Other Microfinance Institutions: -10 to 10 points
+    10. First-time Borrower with Good Affordability: 0-20 points
+
     Risk Levels:
-    - 0-50: High Risk
-    - 51-75: Medium Risk
-    - 76-100: Low Risk
+    - 80-100: Very Low Risk (Approval recommended)
+    - 60-79: Low Risk (Approval recommended)
+    - 40-59: Moderate Risk (Discretionary approval)
+    - 20-39: High Risk (Approval not recommended)
+    - Below 20: Very High Risk (Reject application)
   `,
   'Pay-as-You-Go Loan': `
-    - Payment History: 0-30 points (Better history = Higher score)
-    - Usage Pattern: 0-20 points (Consistent usage = Higher score)
-    - Length of Relationship: 0-20 points (Longer = Higher score)
-    - Average Transaction Value: 0-30 points (Higher value = Higher score)
-    
+    1. Monthly Income-to-Expense Ratio: 0-25 points
+    2. Product Dependency (Hours of Usage): 0-20 points
+    3. Credit History (FCB Score): -10 to 25 points
+    4. Product Verification: -5 to 10 points
+    5. Subscription-to-Usage Ratio: 0-20 points
+    6. Guarantor Relationship: 0-10 points
+    7. Guarantor's Income and Affordability: 0-15 points
+    8. Age of Borrower: -5 to 10 points
+    9. History with Other Microfinance Institutions: -10 to 10 points
+    10. First-time Borrower with Good Affordability: 0-20 points
+
     Risk Levels:
-    - 0-50: High Risk
-    - 51-75: Medium Risk
-    - 76-100: Low Risk
+    - 80-100: Very Low Risk (Approval recommended)
+    - 60-79: Low Risk (Approval recommended)
+    - 40-59: Moderate Risk (Discretionary approval)
+    - 20-39: High Risk (Approval not recommended)
+    - Below 20: Very High Risk (Reject application)
   `,
 };
-
 // New interface for storing chat context
 interface ChatContext {
   messages: { role: string; content: string }[];
@@ -93,6 +115,15 @@ const generateDueDiligenceReport = async (loanType: string, loanDetails: LoanDet
       - Years in Business: ${loanDetails.yearsInBusiness}
       - Credit History: ${loanDetails.fcbScore}
       - Repayment History: ${loanDetails.repaymentHistory}
+      - Guarantor Relationship: ${loanDetails.guarantorRelationship}
+      - Guarantor Income: ${loanDetails.guarantorIncome}
+      - First Time Borrower: ${loanDetails.firstTimeBorrower}
+      - History with Other MFIs: ${loanDetails.historyWithOtherMFIs}
+      ${loanType === 'Pay-as-You-Go Loan' ? `
+      - Product Usage Hours: ${loanDetails.productUsageHours}
+      - Product Verified: ${loanDetails.productVerified}
+      - Subscription Cost: ${loanDetails.subscriptionCost}
+      ` : ''}
 
       Based on the rules, calculate a score, determine risk, and provide a thorough due diligence report.
     `
